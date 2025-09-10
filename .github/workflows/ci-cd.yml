@@ -31,8 +31,10 @@ jobs:
           pip install pytest
 
       # Step 4: Run tests (skip if no tests)
+            # Step 4: Run tests (fixed with PYTHONPATH)
       - name: Run tests
         run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
           if [ -d tests ]; then pytest -q; else echo "No tests found, skipping"; fi
 
       # Step 5: Configure AWS credentials

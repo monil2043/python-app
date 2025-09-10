@@ -59,8 +59,28 @@ jobs:
           cd ..
 
       # Step 7: Deploy Lambda function
+            # Step 7: Deploy Lambda function (create if missing)
       - name: Deploy Lambda
         run: |
-          aws lambda update-function-code \
-            --function-name my-python-function \
-            --zip-file fileb://function.zip
+          set -e
+          FUNCTION_NAME="my-python-function"
+          ZIP_FILE="function.zip"
+          REGION="${{ secrets.AWS_REGION }}"
+
+          # Check if Lambda exists
+          if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
+            echo "Updating existing Lambda function..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --zip-file fileb://$ZIP_FILE \
+              --region $REGION
+          else
+            echo "Creating new Lambda function..."
+            aws lambda create-function \
+              --function-name $FUNCTION_NAME \
+              --runtime python3.11 \
+              --role arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/LambdaBasicExecutionRole \
+              --handler app.lambda_handler \
+              --zip-file fileb://$ZIP_FILE \
+              --region $REGION
+          fi
